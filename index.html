@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#182725">
+<meta name="description" content="MicroLab LACiM: um jogo educacional de investigação microbiológica. Conheça o projeto e experimente um protótipo interativo.">
+<title>MicroLab LACiM — Every Sample Tells a Story.</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #182725;
+  --deep: #11201c;
+  --panel: #20372e;
+  --panel-light: #2c4437;
+  --paper: #e7d8b5;
+  --paper-dark: #cbbb94;
+  --ink: #202d2b;
+  --green: #b9c69a;
+  --muted: #adbaa3;
+  --gold: #cead6c;
+  --line: #53694f;
+  --red: #ad6856;
+  --mono: "Courier New", Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 32px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--paper);
+  font-family: var(--mono);
+  line-height: 1.7;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  opacity: .035;
+  background: repeating-linear-gradient(0deg, #000 0 1px, transparent 1px 4px);
+}
+a { color: inherit; }
+button, select { font: inherit; }
+button, .button { touch-action: manipulation; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+button:focus-visible, a:focus-visible, select:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 5px;
+}
+button, a, select { -webkit-tap-highlight-color: transparent; }
+::selection { background: var(--gold); color: var(--deep); }
+.wrap { width: min(1180px, calc(100% - 48px)); margin-inline: auto; }
+.skip {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  padding: 12px 18px;
+  background: var(--paper);
+  color: var(--ink);
+  z-index: 30;
+}
+.skip:focus { top: 12px; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.topline { height: 5px; background: var(--green); }
+.header {
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--green);
+  background: #2a4133;
+}
+.brand-mark svg { width: 25px; height: 25px; }
+.brand strong { display: block; font-size: 18px; line-height: 1.25; }
+.brand small { display: block; font-size: 9px; letter-spacing: .19em; color: var(--muted); }
+nav { display: flex; gap: 26px; flex-wrap: wrap; }
+nav a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: 12px;
+  color: var(--muted);
+}
+nav a:hover { color: var(--paper); }
+.status, .eyebrow {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-weight: bold;
+}
+.status { display: inline-flex; gap: 8px; align-items: center; color: var(--green); }
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  background: var(--green);
+  box-shadow: 0 0 10px #b9c69a33;
+}
+.hero {
+  padding: 76px 0 64px;
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  align-items: center;
+  gap: 48px;
+}
+.hero .eyebrow { color: var(--gold); margin: 22px 0 18px; }
+h1 { margin: 0; font-size: clamp(38px, 4.7vw, 65px); line-height: 1.12; letter-spacing: -.065em; }
+h1 .project-name { display: block; font-size: 17px; margin-bottom: 18px; letter-spacing: -.03em; color: var(--muted); }
+h1 .accent { color: var(--green); }
+.hero-copy { color: var(--muted); max-width: 480px; font-size: 14px; margin: 25px 0; }
+.actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-decoration: none;
+  min-height: 48px;
+  padding: 12px 18px;
+  background: var(--green);
+  color: var(--deep);
+  border: 1px solid var(--green);
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 4px 4px #0c1b16;
+  transition: transform .18s, background .18s;
+}
+.button:hover { background: #d0d8b5; transform: translateY(-2px); }
+.button.secondary { background: transparent; color: var(--paper); border-color: var(--line); box-shadow: none; }
+.button.secondary:hover { background: var(--panel); }
+.hero-note { font-size: 10px; color: var(--muted); margin-top: 20px; }
+.scene-frame { border: 2px solid #6b7e61; background: var(--deep); box-shadow: 9px 9px #0c1b1677; }
+.window-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #304638;
+  border-bottom: 2px solid #12271d;
+  font-size: 10px;
+  letter-spacing: .07em;
+}
+.window-dots { display: flex; gap: 5px; }
+.window-dots i { width: 7px; height: 7px; border: 1px solid #aaba91; }
+.scene { width: 100%; display: block; background: #536458; }
+.scene-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 14px;
+  color: var(--muted);
+  font-size: 9px;
+}
+.scene-caption b { color: var(--green); }
+.signal { animation: signal 3s steps(2, end) infinite; }
+@keyframes signal { 50% { opacity: .45; } }
+.ticker {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 0;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .09em;
+  flex-wrap: wrap;
+}
+.ticker span::before { content: "+"; color: var(--gold); margin-right: 12px; }
+section { scroll-margin-top: 30px; }
+.section { padding: 84px 0; }
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+.eyebrow { color: var(--green); margin: 0 0 12px; }
+h2 { font-size: clamp(25px, 3.3vw, 38px); line-height: 1.2; letter-spacing: -.055em; margin: 0; }
+h3 { margin: 0 0 10px; line-height: 1.4; }
+.section-heading > p { max-width: 410px; margin: 0; color: var(--muted); font-size: 13px; }
+.demo { border: 2px solid #6c7c61; box-shadow: 7px 7px #0e1e19; }
+.demo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  background: #304638;
+  border-bottom: 3px solid var(--deep);
+}
+.demo-header strong { display: block; font-size: 12px; letter-spacing: .06em; }
+.demo-header small { font-size: 10px; color: #c6cfb5; }
+.reset {
+  background: transparent;
+  color: var(--paper);
+  border: 1px solid #8e9d7d;
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 11px;
+}
+.reset:hover { background: #40583e; }
+.demo-grid { display: grid; grid-template-columns: .95fr 1.05fr 1.05fr; }
+.patient {
+  background: var(--paper);
+  color: var(--ink);
+  padding: 26px;
+  position: relative;
+  background-image: repeating-linear-gradient(0deg, transparent 0 29px, #7b745a08 29px 30px);
+}
+.paper-heading {
+  display: flex;
+  justify-content: space-between;
+  border-top: 3px solid #4b5744;
+  border-bottom: 1px solid #9e997b;
+  padding: 10px 0;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+.paper-heading h3 { font-size: 14px; margin: 0; }
+.paper-heading span { font-size: 10px; }
+.patient dl { margin: 0; }
+.patient dt { font-size: 9px; text-transform: uppercase; letter-spacing: .12em; color: #58604a; margin-top: 14px; }
+.patient dd { margin: 3px 0 0; font-size: 13px; font-weight: bold; }
+.patient .history { font-size: 12px; padding: 13px; background: #d3c6a3; border-left: 3px solid #7b835f; margin: 20px 0; }
+.stamp { display: inline-block; padding: 5px 9px; border: 2px solid #61794d; color: #45603b; transform: rotate(-4deg); font-size: 10px; font-weight: bold; }
+.barcode {
+  height: 24px;
+  width: 130px;
+  margin-top: 25px;
+  background: repeating-linear-gradient(90deg, #344333 0 2px, transparent 2px 4px, #344333 4px 5px, transparent 5px 9px, #344333 9px 12px, transparent 12px 14px);
+}
+.panel { padding: 24px; background: #1d342a; min-width: 0; }
+.tests-panel { border-right: 1px solid var(--line); }
+.panel-heading { font-size: 10px; letter-spacing: .1em; margin: 0 0 18px; color: var(--green); }
+.test-button {
+  width: 100%;
+  text-align: left;
+  padding: 13px 12px;
+  min-height: 70px;
+  margin-bottom: 10px;
+  color: var(--paper);
+  background: #2d4435;
+  border: 1px solid #677b59;
+  box-shadow: 3px 3px #102419;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background .15s;
+}
+.test-button:hover:not(:disabled) { background: #3c5540; }
+.test-button .test-icon { font-size: 20px; color: var(--green); width: 25px; text-align: center; flex-shrink: 0; }
+.test-button strong { display: block; font-size: 12px; }
+.test-button small { display: block; font-size: 10px; color: #c0c9b2; margin-top: 2px; }
+.test-button[aria-pressed="true"] { border-color: var(--gold); background: #3b4933; }
+.test-button[aria-pressed="true"] .test-icon { color: var(--gold); }
+.small { font-size: 10px; color: var(--muted); }
+.result-terminal {
+  background: #10251c;
+  border: 1px solid #52694a;
+  padding: 16px;
+  min-height: 260px;
+}
+.result-terminal .prompt { color: var(--green); font-size: 11px; }
+.empty-result { padding-top: 40px; }
+.empty-result .cross { display: block; color: #779069; font-size: 35px; margin-bottom: 12px; }
+.empty-result p { font-size: 12px; color: #b0c29d; }
+.result-entry { border-bottom: 1px dashed #49633f; padding: 12px 0; }
+.result-entry:last-child { border-bottom: 0; }
+.result-entry h4 { font-size: 10px; color: var(--gold); margin: 0 0 5px; text-transform: uppercase; }
+.result-entry p { font-size: 11px; color: #cad6b9; margin: 0; line-height: 1.65; }
+.hypothesis {
+  padding: 24px;
+  background: #263d30;
+  border-top: 1px solid #637655;
+  display: grid;
+  grid-template-columns: 1fr 1.3fr auto;
+  gap: 20px;
+  align-items: end;
+}
+.hypothesis h3 { font-size: 13px; margin: 0 0 4px; }
+.hypothesis p { margin: 0; font-size: 10px; color: var(--muted); }
+label { display: block; font-size: 10px; margin-bottom: 7px; color: var(--green); }
+select {
+  width: 100%;
+  min-width: 0;
+  min-height: 47px;
+  padding: 10px;
+  background: #e7d8b5;
+  color: #202d2b;
+  border: 2px solid #9ba77f;
+  border-radius: 0;
+  font-size: 12px;
+}
+.feedback { padding: 0 24px; background: #263d30; font-size: 12px; }
+.feedback:not(:empty) { padding: 0 24px 24px; }
+.feedback-inner { border-left: 3px solid var(--gold); padding: 12px 15px; background: #10251c; }
+.feedback-inner.success { border-color: var(--green); }
+.demo-footnote { margin: 19px 0 0; font-size: 10px; color: var(--muted); line-height: 1.8; }
+.demo-footnote a { text-underline-offset: 3px; }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); }
+.step { padding: 28px 25px 0 0; position: relative; }
+.step + .step { padding-left: 25px; border-left: 1px solid var(--line); }
+.step-number { font-size: 36px; font-weight: bold; color: #8fa27b; letter-spacing: -.08em; }
+.step h3 { font-size: 15px; margin: 14px 0 10px; }
+.step p { font-size: 12px; color: var(--muted); margin: 0; }
+.education { background: var(--paper); color: var(--ink); position: relative; }
+.education .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; }
+.education .eyebrow { color: #596d49; }
+.education h2 { max-width: 470px; }
+.education .intro { font-size: 13px; max-width: 450px; color: #4b5544; }
+.education-list { margin: 0; padding: 0; list-style: none; }
+.education-list li { display: flex; gap: 20px; border-bottom: 1px solid #b9ae8c; padding: 20px 0; }
+.education-list li:first-child { padding-top: 0; }
+.education-list span { color: #566f46; font-size: 18px; font-weight: bold; }
+.education-list h3 { font-size: 15px; }
+.education-list p { font-size: 12px; color: #505844; margin: 0; }
+.education-note { display: inline-block; margin-top: 14px; border: 1px solid #857f62; padding: 7px 12px; font-size: 10px; transform: rotate(-2deg); }
+.future { display: grid; grid-template-columns: .9fr 1.1fr; gap: 70px; align-items: start; }
+.future-copy p { color: var(--muted); font-size: 13px; }
+.badge { display: inline-block; border: 1px solid #8e825b; color: var(--gold); padding: 4px 8px; font-size: 9px; letter-spacing: .1em; }
+.future-list { border-top: 1px solid var(--line); }
+.future-item { border-bottom: 1px solid var(--line); padding: 22px 0; display: grid; grid-template-columns: 40px 1fr; gap: 12px; }
+.future-item > span { color: var(--gold); font-size: 21px; }
+.future-item h3 { font-size: 14px; }
+.future-item p { margin: 0; font-size: 12px; color: var(--muted); }
+.about { padding-top: 0; }
+.about-box {
+  border: 1px solid var(--line);
+  padding: 42px;
+  display: grid;
+  grid-template-columns: 1.3fr .7fr;
+  gap: 55px;
+  background: #20352b;
+  box-shadow: 6px 6px #0e1e19;
+}
+.about-box p { color: var(--muted); font-size: 13px; }
+.about-side { border-left: 1px solid var(--line); padding-left: 35px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+.about-side strong { font-size: 14px; margin: 12px 0; }
+footer { border-top: 1px solid var(--line); }
+.footer-inner { padding: 27px 0; display: flex; justify-content: space-between; gap: 20px; align-items: center; }
+.footer-inner p { margin: 0; font-size: 10px; color: var(--muted); }
+.footer-links { display: flex; gap: 24px; font-size: 11px; }
+.footer-links a { text-decoration: none; padding: 12px 0; }
+.footer-links a:hover { text-decoration: underline; }
+noscript p { padding: 20px; background: var(--paper); color: var(--ink); }
+@media (min-width: 1000px) {
+  .scene-frame { transform: rotate(1deg); }
+}
+@media (max-width: 1000px) {
+  .header { flex-wrap: wrap; padding: 22px 0; gap: 16px; }
+  .header > .status { display: none; }
+  .hero { gap: 28px; }
+  .hero h1 { font-size: 46px; }
+  .demo-grid { grid-template-columns: 1fr 1fr; }
+  .results-panel { grid-column: 1 / -1; border-top: 1px solid var(--line); }
+  .tests-panel { border-right: 0; }
+  .result-terminal { min-height: 150px; }
+  .empty-result { padding-top: 5px; display: flex; align-items: center; gap: 20px; }
+  .empty-result .cross { margin: 0; }
+  .hypothesis { grid-template-columns: 1fr 1fr; }
+  .hypothesis > div:first-child { grid-column: 1 / -1; }
+  .education .wrap { gap: 40px; }
+  .future { gap: 35px; }
+}
+@media (max-width: 700px) {
+  .wrap { width: calc(100% - 32px); }
+  .header { align-items: flex-start; }
+  nav { width: 100%; gap: 0; justify-content: space-between; }
+  nav a { font-size: 10px; }
+  .hero { grid-template-columns: 1fr; padding: 40px 0; gap: 35px; }
+  .hero h1 { font-size: clamp(39px, 10vw, 60px); }
+  .hero-copy { max-width: 100%; }
+  .hero .eyebrow { margin-top: 16px; }
+  .hero-note { font-size: 9px; }
+  .ticker { font-size: 9px; gap: 10px 20px; }
+  .ticker span { width: calc(50% - 10px); }
+  .section { padding: 55px 0; }
+  .section-heading { display: block; }
+  .section-heading > p { margin-top: 18px; }
+  .demo-header { padding: 12px; gap: 10px; }
+  .demo-header strong { font-size: 10px; }
+  .demo-header small { font-size: 9px; }
+  .reset { font-size: 10px; padding: 7px; flex-shrink: 0; }
+  .demo-grid { grid-template-columns: 1fr; }
+  .patient, .panel { padding: 22px; }
+  .tests-panel { border-top: 3px solid #13291e; }
+  .results-panel { grid-column: auto; }
+  .hypothesis { grid-template-columns: 1fr; padding: 22px; gap: 16px; }
+  .hypothesis > div:first-child { grid-column: auto; }
+  select { font-size: 16px; }
+  .hypothesis .button { width: 100%; }
+  .steps { grid-template-columns: 1fr 1fr; gap: 26px 0; }
+  .step { padding-right: 18px; }
+  .step + .step { padding-left: 18px; }
+  .step:nth-child(3) { border-left: 0; padding-left: 0; }
+  .step h3 { font-size: 13px; }
+  .step p { font-size: 11px; }
+  .education .wrap, .future, .about-box { grid-template-columns: 1fr; gap: 30px; }
+  .education-list li:first-child { padding-top: 15px; }
+  .about { padding-top: 0; }
+  .about-box { padding: 25px; }
+  .about-side { border-left: 0; border-top: 1px solid var(--line); padding: 25px 0 0; }
+  .footer-inner { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .actions .button { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body id="inicio">
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<div class="topline"></div>
+
+<header class="header wrap">
+  <a class="brand" href="#inicio" aria-label="MicroLab LACiM — início">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="#b9c69a" shape-rendering="crispEdges">
+        <path d="M4 3h5v5H4zm11 0h5v5h-5zM9 8h6v8H9zM3 16h6v5H3zm12 0h6v5h-6z"/>
+      </svg>
+    </span>
+    <span><strong>MicroLab <span style="color:var(--green)">LACiM</span></strong><small>INVESTIGAÇÃO MICROBIOLÓGICA</small></span>
+  </a>
+  <nav aria-label="Navegação principal">
+    <a href="#prototipo">Protótipo</a>
+    <a href="#como-funciona">Como funciona</a>
+    <a href="#educacao">Educação</a>
+    <a href="#sobre">O projeto</a>
+  </nav>
+  <span class="status"><span class="dot"></span> Em desenvolvimento</span>
+</header>
+
+<main id="conteudo">
+  <div class="wrap">
+    <section class="hero" aria-labelledby="hero-title">
+      <div>
+        <span class="status"><span class="dot signal"></span> A bancada está aberta</span>
+        <p class="eyebrow">Um jogo sobre investigar, interpretar e aprender.</p>
+        <h1 id="hero-title">
+          <span class="project-name">MicroLab LACiM —</span>
+          <span lang="en">Every Sample<br><span class="accent">Tells a Story.</span></span>
+        </h1>
+        <p class="hero-copy">Por trás de cada amostra, um caso para desvendar. Um simulador educacional de diagnóstico microbiológico em que o seu raciocínio conduz a investigação.</p>
+        <div class="actions">
+          <a class="button" href="#prototipo">Experimentar o protótipo <span aria-hidden="true">↗</span></a>
+          <a class="button secondary" href="#sobre">Conhecer o projeto</a>
+        </div>
+        <p class="hero-note">NO NAVEGADOR · CASOS FICTÍCIOS · CIÊNCIA EM CONSTRUÇÃO</p>
+      </div>
+
+      <div class="scene-frame">
+        <div class="window-bar">
+          <span>LACiM OS / BANCADA 04</span>
+          <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        </div>
+        <svg class="scene" viewBox="0 0 540 410" role="img" aria-labelledby="scene-title scene-desc" shape-rendering="crispEdges">
+          <title id="scene-title">Bancada de microbiologia em pixel art</title>
+          <desc id="scene-desc">Laboratório em tons verdes, com computador, entrada de amostras, ficha em papel, tubo e manual de procedimentos.</desc>
+          <defs>
+            <pattern id="tiles" width="60" height="45" patternUnits="userSpaceOnUse">
+              <rect width="60" height="45" fill="#5b6e5e"/>
+              <path d="M0 44H60M59 0V45" stroke="#465d4d" stroke-width="3"/>
+            </pattern>
+            <pattern id="desk" width="135" height="60" patternUnits="userSpaceOnUse">
+              <rect width="135" height="60" fill="#425747"/>
+              <path d="M0 59H135M134 0V60" stroke="#334b3b" stroke-width="2"/>
+            </pattern>
+          </defs>
+          <rect width="540" height="410" fill="url(#tiles)"/>
+          <rect x="175" y="0" width="210" height="9" fill="#283e31"/>
+          <rect x="185" y="0" width="190" height="5" fill="#dddfb3"/>
+          <rect x="447" width="12" height="230" fill="#374e40"/>
+          <rect x="447" width="4" height="230" fill="#89917a"/>
+          <rect x="28" y="30" width="104" height="112" fill="#304535"/>
+          <rect x="23" y="25" width="104" height="112" fill="#d2c6a1"/>
+          <g font-family="monospace" fill="#45573e">
+            <text x="34" y="45" font-size="10">LACiM / 04</text>
+            <text x="34" y="69" font-size="12" font-weight="bold">IDENTIFICAR</text>
+            <text x="34" y="86" font-size="12" font-weight="bold">ANTES DE</text>
+            <text x="34" y="103" font-size="12" font-weight="bold">PROCESSAR.</text>
+            <text x="34" y="124" font-size="6">PROTOCOLO DE RECEPÇÃO</text>
+          </g>
+          <rect x="202" y="40" width="182" height="124" fill="#263b2d"/>
+          <rect x="212" y="49" width="162" height="93" fill="#162a20"/>
+          <path d="M214 75H371M214 96H371M214 117H371" stroke="#293d2c" stroke-width="4"/>
+          <rect x="229" y="59" width="127" height="17" fill="#b9c19d"/>
+          <text x="238" y="70" font-family="monospace" font-size="7" fill="#2b422f">ENTRADA DE AMOSTRAS</text>
+          <rect x="212" y="142" width="162" height="22" fill="#b7a775"/>
+          <text x="240" y="157" font-family="monospace" font-size="8" fill="#263c2c">RECEPÇÃO ABERTA</text>
+          <rect x="467" y="25" width="57" height="30" fill="#9aa385"/>
+          <rect x="471" y="29" width="49" height="22" fill="#233b2e"/>
+          <text x="477" y="44" font-family="monospace" font-size="12" fill="#d6d7af">08:00</text>
+          <rect y="205" width="540" height="205" fill="url(#desk)"/>
+          <rect y="199" width="540" height="11" fill="#89967c"/>
+          <rect y="210" width="540" height="10" fill="#253d2e"/>
+          <!-- Computador: mesma linguagem visual da bancada do jogo. -->
+          <rect x="28" y="161" width="165" height="116" fill="#192c24"/>
+          <rect x="23" y="155" width="165" height="116" fill="#899784"/>
+          <rect x="35" y="166" width="140" height="88" fill="#193c31"/>
+          <rect x="41" y="173" width="128" height="13" fill="#67856b"/>
+          <text x="47" y="182" font-family="monospace" font-size="7" fill="#e6d7af">LACIM OS — CENTRAL</text>
+          <g fill="#b9c69a">
+            <rect x="49" y="198" width="23" height="20"/>
+            <rect x="89" y="198" width="23" height="20"/>
+            <rect x="129" y="198" width="23" height="20"/>
+          </g>
+          <g stroke="#294333" stroke-width="2" fill="none">
+            <path d="M50 201l10 8 11-8"/>
+            <path d="M94 204h13m-13 5h10"/>
+            <path d="M137 202v12m-5-6h10"/>
+          </g>
+          <rect x="42" y="236" width="126" height="10" fill="#42654b"/>
+          <rect x="145" y="259" width="6" height="5" fill="#c1d595" class="signal"/>
+          <rect x="89" y="271" width="39" height="17" fill="#53684f"/>
+          <rect x="63" y="287" width="92" height="8" fill="#a3b08e"/>
+          <rect x="25" y="305" width="166" height="34" fill="#1d3428"/>
+          <rect x="21" y="301" width="166" height="30" fill="#8b9e86"/>
+          <path d="M29 311H178M29 322H178M42 306V326M62 306V326M82 306V326M102 306V326M122 306V326M142 306V326M162 306V326" stroke="#405849" stroke-width="3"/>
+          <!-- Bandeja, ficha e amostra. -->
+          <rect x="225" y="236" width="175" height="112" fill="#223a2b"/>
+          <rect x="228" y="231" width="175" height="110" fill="#7c8b71"/>
+          <rect x="233" y="236" width="165" height="100" fill="#405b43"/>
+          <g transform="rotate(-6 285 279)">
+            <rect x="247" y="240" width="75" height="90" fill="#1c3123"/>
+            <rect x="242" y="235" width="75" height="90" fill="#e6d7af"/>
+            <rect x="251" y="245" width="31" height="5" fill="#58694c"/>
+            <path d="M251 262h55m-55 11h43m-43 11h49m-49 11h37" stroke="#a89e77" stroke-width="3"/>
+            <rect x="278" y="305" width="28" height="10" fill="#8dac76"/>
+          </g>
+          <rect x="349" y="238" width="29" height="77" fill="#bac5a5"/>
+          <rect x="344" y="227" width="39" height="15" fill="#809283"/>
+          <rect x="354" y="245" width="5" height="55" fill="#d6d8b9"/>
+          <rect x="354" y="284" width="20" height="26" fill="#b99455"/>
+          <rect x="345" y="262" width="37" height="20" fill="#e7d8b5"/>
+          <path d="M350 266v11m4-11v11m5-11v11m3-11v11m5-11v11m5-11v11m4-11v11" stroke="#26372b" stroke-width="2"/>
+          <!-- Manual. -->
+          <g transform="rotate(8 464 294)">
+            <rect x="433" y="262" width="70" height="83" fill="#172b21"/>
+            <rect x="428" y="255" width="70" height="83" fill="#d4c69e"/>
+            <rect x="428" y="251" width="70" height="81" fill="#8f4b42"/>
+            <rect x="435" y="251" width="7" height="81" fill="#ba7b58"/>
+            <path d="M451 266h36m-31 9h26" stroke="#d2b584" stroke-width="3"/>
+            <path d="M468 288v23m-11-12h22" stroke="#d2b584" stroke-width="7"/>
+            <text x="449" y="325" font-family="monospace" font-size="6" fill="#eadbb1">PROCEDIMENTOS</text>
+          </g>
+          <rect y="375" width="540" height="35" fill="#273b2c"/>
+          <rect y="375" width="540" height="5" fill="#748469"/>
+          <text x="20" y="398" font-family="monospace" font-size="9" fill="#bdc79f" letter-spacing="2">BANCADA 04</text>
+          <text x="371" y="398" font-family="monospace" font-size="8" fill="#bdc79f">MICROLAB / LACiM</text>
+        </svg>
+        <div class="scene-caption"><span><b>●</b> AMBIENTE ILUSTRATIVO</span><span>SEU PRÓXIMO CASO COMEÇA AQUI.</span></div>
+      </div>
+    </section>
+
+    <div class="ticker" aria-label="Características do projeto">
+      <span>MICROBIOLOGIA CLÍNICA</span>
+      <span>INVESTIGAÇÃO POR CASOS</span>
+      <span>DECISÕES COM EVIDÊNCIAS</span>
+      <span>FEITO PARA NAVEGADORES</span>
+    </div>
+
+    <section class="section" id="prototipo" aria-labelledby="demo-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">01 / Entre na bancada</p><h2 id="demo-title">Uma amostra.<br>Qual é a sua hipótese?</h2></div>
+        <p>Leia a ficha, escolha os exames e conecte os achados. Experimente uma pequena parte da investigação.</p>
+      </div>
+
+      <noscript><p>A demonstração precisa de JavaScript. Ative-o no navegador para selecionar exames e conferir sua hipótese.</p></noscript>
+
+      <div class="demo">
+        <div class="demo-header">
+          <div><strong>CENTRAL DE TRABALHO / CASO 001</strong><small>PROTÓTIPO INTERATIVO · NÃO É O JOGO COMPLETO</small></div>
+          <button class="reset" id="reset-demo" type="button">↺ Reiniciar</button>
+        </div>
+        <div class="demo-grid">
+          <article class="patient" aria-labelledby="patient-title">
+            <div class="paper-heading"><h3 id="patient-title">FICHA DE REQUISIÇÃO</h3><span>001 / A</span></div>
+            <dl>
+              <dt>Paciente fictício</dt><dd>R. M. · 28 anos</dd>
+              <dt>Material recebido</dt><dd>Aspirado de abscesso cutâneo</dd>
+              <dt>Identificação da amostra</dt><dd>LAC-001 · Material purulento</dd>
+            </dl>
+            <div class="history"><strong>Histórico clínico</strong><br>Lesão dolorosa no antebraço, com vermelhidão e acúmulo de pus há três dias. Material coletado antes do início de antimicrobianos.</div>
+            <span class="stamp">CASO EDUCACIONAL FICTÍCIO</span>
+            <div class="barcode" aria-hidden="true"></div>
+          </article>
+
+          <div class="panel tests-panel">
+            <h3 class="panel-heading">01 / SELECIONAR EXAMES</h3>
+            <button class="test-button" data-test="gram" type="button" aria-pressed="false">
+              <span class="test-icon" aria-hidden="true">⠿</span>
+              <span><strong lang="en">Gram Staining</strong><small>Coloração de Gram da amostra</small></span>
+            </button>
+            <button class="test-button" data-test="culture" type="button" aria-pressed="false">
+              <span class="test-icon" aria-hidden="true">◎</span>
+              <span><strong lang="en">Culture</strong><small>Cultura em ágar sangue</small></span>
+            </button>
+            <button class="test-button" data-test="catalase" type="button" aria-pressed="false" disabled aria-describedby="test-help">
+              <span class="test-icon" aria-hidden="true">⁙</span>
+              <span><strong lang="en">Catalase Test</strong><small>Disponível após a cultura</small></span>
+            </button>
+            <button class="test-button" data-test="coagulase" type="button" aria-pressed="false" disabled aria-describedby="test-help">
+              <span class="test-icon" aria-hidden="true">⌁</span>
+              <span><strong lang="en">Coagulase Test</strong><small>Disponível após a cultura</small></span>
+            </button>
+            <p class="small" id="test-help">Catalase e coagulase são realizadas em colônias isoladas. Faça a cultura para liberá-las.</p>
+          </div>
+
+          <div class="panel results-panel">
+            <h3 class="panel-heading">02 / INTERPRETAR RESULTADOS</h3>
+            <div class="result-terminal">
+              <div class="prompt">&gt; exames registrados: <span id="exam-count">0</span>/4</div>
+              <div id="result-content">
+                <div class="empty-result"><span class="cross" aria-hidden="true">⌖</span><p>Aguardando investigação.<br>Selecione um exame para receber o primeiro resultado.</p></div>
+              </div>
+            </div>
+            <p class="small">Resultados predefinidos. O tempo de processamento foi abreviado nesta demonstração.</p>
+          </div>
+        </div>
+
+        <form id="hypothesis-form" class="hypothesis">
+          <div><h3>03 / Hipótese diagnóstica</h3><p>Qual agente é mais compatível com os achados?</p></div>
+          <div>
+            <label for="hypothesis">Selecione uma hipótese</label>
+            <select id="hypothesis" name="hypothesis" required>
+              <option value="">Escolha o possível agente…</option>
+              <option value="aureus">Staphylococcus aureus</option>
+              <option value="epidermidis">Staphylococcus epidermidis</option>
+              <option value="pyogenes">Streptococcus pyogenes</option>
+              <option value="coli">Escherichia coli</option>
+            </select>
+          </div>
+          <button id="check-hypothesis" class="button" type="submit">Conferir hipótese →</button>
+        </form>
+        <div id="feedback" class="feedback" role="status" aria-live="polite" aria-atomic="true"></div>
+        <p class="sr-only" id="announcement" role="status" aria-live="polite" aria-atomic="true"></p>
+      </div>
+
+      <p class="demo-footnote">Simulação simplificada para aprendizagem. O conjunto de testes sustenta uma identificação presuntiva; não substitui investigação clínica, protocolos laboratoriais ou métodos confirmatórios. Não há teste de sensibilidade neste caso. Referência: <a href="https://reach.cdc.gov/sites/default/files/job-aids-resources/Staphylococci_ID_Chart_Branded_508.pdf" target="_blank" rel="noopener noreferrer">CDC — identificação de estafilococos ↗</a>.</p>
+    </section>
+
+    <section class="section" id="como-funciona" aria-labelledby="how-title" style="padding-top:0">
+      <div class="section-heading">
+        <div><p class="eyebrow">02 / O ciclo da investigação</p><h2 id="how-title">O próximo passo é seu.</h2></div>
+        <p>Você escolhe o exame. O laboratório entrega o resultado. Interpretar as evidências faz parte do desafio.</p>
+      </div>
+      <div class="steps">
+        <article class="step"><span class="step-number">01</span><h3>Receba o caso</h3><p>Conheça a história clínica e a amostra biológica. Toda investigação começa com contexto.</p></article>
+        <article class="step"><span class="step-number">02</span><h3>Escolha os exames</h3><p>Decida quais testes podem responder à sua pergunta. Cada escolha deve ter uma razão.</p></article>
+        <article class="step"><span class="step-number">03</span><h3>Leia as evidências</h3><p>Relacione morfologia, cultura e testes bioquímicos para reduzir as possibilidades.</p></article>
+        <article class="step"><span class="step-number">04</span><h3>Formule a hipótese</h3><p>Identifique o agente provável e fundamente sua conclusão nos resultados disponíveis.</p></article>
+      </div>
+    </section>
+  </div>
+
+  <section class="section education" id="educacao" aria-labelledby="education-title">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">03 / Ciência que se aprende investigando</p>
+        <h2 id="education-title">Mais do que reconhecer.<br>Aprender a raciocinar.</h2>
+        <p class="intro">O MicroLab LACiM pretende transformar conceitos de microbiologia clínica em decisões dentro de uma bancada virtual. Uma proposta para aproximar o estudo da lógica da investigação laboratorial.</p>
+        <span class="education-note">OBSERVAR → QUESTIONAR → INTERPRETAR</span>
+      </div>
+      <ul class="education-list">
+        <li><span aria-hidden="true">↳</span><div><h3>Raciocínio microbiológico</h3><p>Conectar a história clínica e o tipo de amostra aos possíveis agentes infecciosos.</p></div></li>
+        <li><span aria-hidden="true">↳</span><div><h3>Seleção racional de testes</h3><p>Entender o que cada exame pode esclarecer e quando ele contribui para a investigação.</p></div></li>
+        <li><span aria-hidden="true">↳</span><div><h3>Interpretação laboratorial</h3><p>Avaliar o conjunto de achados, reconhecer limites e justificar uma hipótese com evidências.</p></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <section class="section future" id="inteligencia-artificial" aria-labelledby="ai-title">
+      <div class="future-copy">
+        <p class="eyebrow">04 / Próximos horizontes</p>
+        <h2 id="ai-title">Novos casos.<br>Novas possibilidades.</h2>
+        <p>Uma integração futura com inteligência artificial poderá ampliar as experiências de aprendizagem, com revisão científica do conteúdo e atenção à qualidade do feedback.</p>
+        <span class="badge">PLANEJADO · AINDA NÃO IMPLEMENTADO</span>
+        <p class="small">Este protótipo não utiliza IA, APIs externas ou geração automática de resultados.</p>
+      </div>
+      <div class="future-list">
+        <article class="future-item"><span aria-hidden="true">01</span><div><h3>Geração de casos educacionais</h3><p>Explorar histórias clínicas variadas, sujeitas a critérios de coerência microbiológica e revisão.</p></div></article>
+        <article class="future-item"><span aria-hidden="true">02</span><div><h3>Dificuldade adaptativa</h3><p>Investigar formas de ajustar a complexidade dos desafios ao progresso do estudante.</p></div></article>
+        <article class="future-item"><span aria-hidden="true">03</span><div><h3>Feedback educacional</h3><p>Oferecer explicações contextualizadas sobre as escolhas feitas e as evidências interpretadas.</p></div></article>
+      </div>
+    </section>
+
+    <section class="section about" id="sobre" aria-labelledby="about-title">
+      <div class="about-box">
+        <div>
+          <p class="eyebrow">05 / Sobre o projeto</p>
+          <h2 id="about-title">Um laboratório de ideias.<br>Em desenvolvimento.</h2>
+          <p>O MicroLab LACiM é um projeto educacional em estágio inicial de desenvolvimento. Combina investigação por casos, uma bancada de laboratório em pixel art e decisões orientadas por resultados microbiológicos.</p>
+          <p>A proposta é construir uma experiência para estudantes e abrir espaço para contribuições em ciência, educação, design e desenvolvimento. A eficácia educacional ainda precisa ser avaliada.</p>
+        </div>
+        <div class="about-side">
+          <span class="status"><span class="dot"></span> Projeto em construção</span>
+          <strong>Acompanhe a próxima etapa.</strong>
+          <p>Conheça a versão publicada e acompanhe a evolução do MicroLab LACiM.</p>
+          <a class="button secondary" href="https://microlablacim.github.io/microlab-lacim.github.io/" target="_blank" rel="noopener noreferrer">Visitar o projeto ↗</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div><strong style="font-size:14px">MicroLab LACiM</strong><p>© 2026 · Projeto educacional em desenvolvimento.</p></div>
+    <div class="footer-links">
+      <a href="https://github.com/microlablacim/microlab-lacim.github.io" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+      <a href="#inicio">Voltar ao início ↑</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+"use strict";
+
+(() => {
+  const tests = {
+    gram: {
+      title: "Coloração de Gram",
+      result: "Numerosos neutrófilos e cocos Gram-positivos, predominantemente em agrupamentos. O achado orienta a investigação, mas não identifica a espécie."
+    },
+    culture: {
+      title: "Cultura em ágar sangue",
+      result: "Após incubação simulada, crescimento predominante de colônias cremosas, de pigmentação dourada, com beta-hemólise. Colônias isoladas disponíveis para testes bioquímicos."
+    },
+    catalase: {
+      title: "Teste da catalase",
+      result: "Positivo em colônia isolada: formação de bolhas. Em conjunto com a morfologia, favorece a investigação de estafilococos. Não define a espécie."
+    },
+    coagulase: {
+      title: "Coagulase em tubo",
+      result: "Positiva: formação de coágulo. Em conjunto com Gram, cultura e catalase, sustenta a hipótese presuntiva de um estafilococo coagulase-positivo."
+    }
+  };
+
+  const completed = new Set();
+  const buttons = [...document.querySelectorAll("[data-test]")];
+  const resultContent = document.getElementById("result-content");
+  const examCount = document.getElementById("exam-count");
+  const feedback = document.getElementById("feedback");
+  const announcement = document.getElementById("announcement");
+  const hypothesis = document.getElementById("hypothesis");
+  const help = document.getElementById("test-help");
+  const initialResult = resultContent.innerHTML;
+
+  function clearFeedback() {
+    feedback.replaceChildren();
+  }
+
+  function showFeedback(message, success = false) {
+    const box = document.createElement("div");
+    box.className = "feedback-inner" + (success ? " success" : "");
+    box.textContent = message;
+    feedback.replaceChildren(box);
+  }
+
+  function renderResults() {
+    resultContent.replaceChildren();
+
+    completed.forEach(key => {
+      const entry = document.createElement("article");
+      const heading = document.createElement("h4");
+      const paragraph = document.createElement("p");
+
+      entry.className = "result-entry";
+      heading.textContent = tests[key].title;
+      paragraph.textContent = tests[key].result;
+      entry.append(heading, paragraph);
+      resultContent.append(entry);
+    });
+
+    examCount.textContent = String(completed.size);
+  }
+
+  function updateButtons() {
+    buttons.forEach(button => {
+      const key = button.dataset.test;
+      const done = completed.has(key);
+      const needsCulture = key === "catalase" || key === "coagulase";
+
+      button.disabled = needsCulture && !completed.has("culture");
+      button.setAttribute("aria-pressed", String(done));
+
+      const caption = button.querySelector("small");
+
+      if (done) {
+        caption.textContent = "✓ Resultado registrado";
+      } else if (needsCulture) {
+        caption.textContent = completed.has("culture")
+          ? "Testar colônia isolada"
+          : "Disponível após a cultura";
+      } else {
+        caption.textContent = key === "gram"
+          ? "Coloração de Gram da amostra"
+          : "Cultura em ágar sangue";
+      }
+    });
+
+    help.textContent = completed.has("culture")
+      ? "Colônias disponíveis. Catalase e coagulase liberadas. Exames já realizados podem ser consultados novamente."
+      : "Catalase e coagulase são realizadas em colônias isoladas. Faça a cultura para liberá-las.";
+  }
+
+  buttons.forEach(button => {
+    button.addEventListener("click", () => {
+      const key = button.dataset.test;
+      if (!tests[key] || button.disabled) return;
+
+      if (completed.has(key)) {
+        announcement.textContent = tests[key].title + ": " + tests[key].result;
+        return;
+      }
+
+      completed.add(key);
+      clearFeedback();
+      renderResults();
+      updateButtons();
+
+      announcement.textContent = tests[key].title + ". " + tests[key].result
+        + (key === "culture" ? " Os testes de catalase e coagulase estão disponíveis." : "");
+    });
+  });
+
+  hypothesis.addEventListener("change", clearFeedback);
+
+  document.getElementById("hypothesis-form").addEventListener("submit", event => {
+    event.preventDefault();
+
+    if (!hypothesis.value) {
+      hypothesis.focus();
+      return;
+    }
+
+    if (completed.size < 4) {
+      showFeedback("A investigação ainda está incompleta. Reúna os quatro resultados para comparar as hipóteses deste caso. Gram e catalase, isoladamente, não permitem identificar a espécie.");
+      return;
+    }
+
+    const answers = {
+      aureus: "Hipótese compatível: Staphylococcus aureus. Cocos Gram-positivos em agrupamentos, catalase positiva, coagulase positiva e a cultura observada sustentam essa identificação presuntiva no caso. A confirmação depende do contexto e dos métodos do laboratório; espécies relacionadas podem compartilhar esse perfil. Sem antibiograma, não é possível concluir se há resistência à meticilina.",
+      epidermidis: "Reavalie a coagulase. Staphylococcus epidermidis é tipicamente coagulase negativa, enquanto o isolado deste caso apresentou coagulase positiva. Compare esse achado com os demais resultados e tente novamente.",
+      pyogenes: "Reavalie o conjunto de achados. Streptococcus pyogenes é tipicamente catalase negativo e pode formar cadeias. Aqui, há catalase positiva e cocos em agrupamentos. Beta-hemólise, sozinha, não identifica a espécie.",
+      coli: "Comece pela morfologia e pela coloração. Escherichia coli é um bacilo Gram-negativo. A amostra deste caso apresentou cocos Gram-positivos em agrupamentos. Revise a hipótese com base nessa diferença."
+    };
+
+    showFeedback(answers[hypothesis.value], hypothesis.value === "aureus");
+  });
+
+  document.getElementById("reset-demo").addEventListener("click", () => {
+    completed.clear();
+    hypothesis.value = "";
+    examCount.textContent = "0";
+    resultContent.innerHTML = initialResult;
+    clearFeedback();
+    updateButtons();
+    announcement.textContent = "Caso reiniciado. Selecione um exame para começar uma nova investigação.";
+    buttons[0].focus({ preventScroll: true });
+  });
+})();
+</script>
+</body>
+</html>
